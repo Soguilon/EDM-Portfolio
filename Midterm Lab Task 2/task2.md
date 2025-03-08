@@ -1,6 +1,25 @@
 # [Midterm Lab Task 2](https://github.com/user-attachments/files/19111495/Midterm.Lab.Task.2.xlsx)
 This portfolio demonstrates the process of data cleaning and preparation using Power Query. The dataset consists of multiple related tables, where cleaning techniques are applied to improve data quality and consistency before analysis.
 
+## Excel
+let
+    Source = Excel.Workbook(File.Contents("E:\midtermlab task 2.xlsx"), null, true),
+    Uncleaned_DS_jobs__2_Table = Source{[Item="Uncleaned_DS_jobs__2",Kind="Table"]}[Data],
+    #"Changed Type" = Table.TransformColumnTypes(Uncleaned_DS_jobs__2_Table,{{"index", Int64.Type}, {"Job Title", type text}, {"Salary Estimate", type text}, {"Job Description", type text}, {"Rating", type number}, {"Company Name", type text}, {"Location", type text}, {"Headquarters", type any}, {"Size", type any}, {"Founded", Int64.Type}, {"Type of ownership", type any}, {"Industry", type any}, {"Sector", type any}, {"Revenue", type any}, {"Competitors", type any}, {"Min Sal", Int64.Type}, {"Max Sal", Int64.Type}, {"Role Type", type text}, {"Location Correction", type text}, {"State Abbreviations", type text}}),
+    #"Inserted Text Before Delimiter" = Table.AddColumn(#"Changed Type", "MinCompanySize", each Text.BeforeDelimiter([Size], " "), type text),
+    #"Inserted Text Between Delimiters" = Table.AddColumn(#"Inserted Text Before Delimiter", "MaxCompanySize", each Text.BetweenDelimiters([Size], " ", " ", 1, 0), type text),
+    #"Filtered Rows" = Table.SelectRows(#"Inserted Text Between Delimiters", each ([Competitors] <> -1)),
+    #"Filtered Rows1" = Table.SelectRows(#"Filtered Rows", each ([Industry] <> -1)),
+    #"Filtered Rows2" = Table.SelectRows(#"Filtered Rows1", each ([Revenue] <> "Unknown / Non-Applicable")),
+    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows2",{"Job Description"}),
+    #"Trimmed Text" = Table.TransformColumns(#"Removed Columns",{{"Company Name", Text.Trim, type text}}),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Trimmed Text", "Company Name", Splitter.SplitTextByDelimiter("#(lf)", QuoteStyle.Csv), {"Company Name.1", "Company Name.2"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Company Name.1", type text}, {"Company Name.2", type number}}),
+    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type1",{"Company Name.2"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns1",{{"Company Name.1", "Company Name"}})
+in
+    #"Renamed Columns"
+
 ## Step-by-Step Process
 ### Step 1: Download and Load Data  
 1. Download the dataset (Uncleaned_DS_jobs.csv)  
